@@ -1,0 +1,155 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply Online - Little Crescents Kindergarten & Crescent High School</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f0f2f5;
+            /* ✅ ব্যাকগ্রাউন্ড ইমেজ লোডিং সিনট্যাক্স ঠিক করা হয়েছে */
+            background-image: url("{% static 'images/school.jpg' %}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            color: #333;
+        }
+        .overlay {
+            /* সাদা স্বচ্ছ ব্যাকগ্রাউন্ড */
+            background-color: rgba(255, 255, 255, 0.92); 
+            min-height: 100vh;
+            padding: 30px 20px; /* প্যাডিং বাড়ানো হলো */
+        }
+        .header {
+            background-color: #004080;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        .container {
+            max-width: 750px; /* কন্টেইনার সাইজ সামান্য বাড়ানো হলো */
+            margin: 20px auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15); /* শ্যাডো স্পষ্ট করা হলো */
+        }
+        h1 {
+            color: #004080;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        /* 💡 গুরুত্বপূর্ণ ফিক্স: Django ফর্ম রেন্ডারিং ({{ form.as_p }}) ঠিক করা */
+        form p {
+            margin-bottom: 20px; 
+        }
+        
+        form label {
+            display: block; /* লেবেলকে পুরো লাইন নিতে দিন */
+            margin-bottom: 5px; 
+            font-weight: bold; /* লেবেলগুলো স্পষ্ট করা */
+            color: #004080; /* কালার অ্যাড করা হলো */
+            font-size: 14px;
+        }
+        
+        form input, form select, form textarea {
+            width: 100%;
+            padding: 12px; /* প্যাডিং সামান্য বাড়ানো হলো */
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            box-sizing: border-box; 
+            transition: border-color 0.3s;
+        }
+        form input:focus, form select:focus, form textarea:focus {
+            border-color: #0066cc; /* ফোকাস করলে বর্ডার কালার পরিবর্তন */
+            outline: none;
+        }
+        
+        form button {
+            background-color: #0066cc;
+            color: white;
+            padding: 12px 25px; 
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 17px;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: background-color 0.3s;
+        }
+        form button:hover {
+            background-color: #004080;
+        }
+        .messages {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        .messages .success {
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+        .messages .error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+        .footer-nav {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .footer-nav a {
+            color: #0066cc;
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: bold;
+        }
+        .footer-nav a:hover {
+            color: #004080;
+        }
+    </style>
+</head>
+<body>
+<div class="overlay">
+    <div class="header">
+        Apply Online
+    </div>
+
+    <div class="container">
+        <h1>Admission Application Form</h1>
+
+        <div class="messages">
+            {% if messages %}
+                {% for message in messages %}
+                    <p class="{{ message.tags }}">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Submit Application</button>
+        </form>
+
+        <div class="footer-nav">
+            <a href="{% url 'admission_page' %}">Back to Admission Page</a>
+            
+            <a href="{% url 'main_content_page' %}">Back to Home</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,1316 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Dashboard</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* ... (CSS Styles remain unchanged up to line ~100) ... */
+    :root{
+      --accent-1: #4f46e5; /* indigo */
+      --accent-2: #06b6d4; /* cyan */
+      --accent-3: #fb7185; /* pink */
+      --card-bg: #ffffff;
+      --page-bg: rgba(240,242,245,0.95);
+      --muted: #6b7280;
+      --radius: 12px;
+      --shadow: 0 6px 18px rgba(15,23,42,0.08);
+      --glass: rgba(255,255,255,0.7);
+    }
+
+    /* Page background with faint school image */
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background-color: #eef2f7;
+      background-image: url("{% static 'images/school.jpg' %}");/* put your school image named school.jpg in same folder */
+      background-size: cover;
+      background-position: center;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      font-size: 14px; /* Global font size reduced */
+    }
+
+    /* main container centered with white card look */
+    .wrap {
+      max-width: 1200px;
+      margin: 26px auto;
+      background: var(--card-bg);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      min-height: 720px;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: linear-gradient(180deg,var(--accent-1), #7c3aed66);
+      color: white;
+      padding: 22px;
+      box-sizing: border-box;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+    .brand { display:flex; align-items:center; gap:12px; font-weight:700; font-size:18px; }
+    .brand img { width:36px; height:36px; border-radius:8px; object-fit:cover; box-shadow:0 6px 18px rgba(0,0,0,0.14); }
+    .profile {
+      display:flex; gap:12px; align-items:center; padding:12px; background: rgba(255,255,255,0.06); border-radius:10px;
+    }
+    .profile img { width:56px; height:56px; border-radius:10px; object-fit:cover; border:2px solid rgba(255,255,255,0.14); }
+    .profile .name { font-weight:700; font-size:15px; }
+    .profile .role { font-size:12px; color:rgba(255,255,255,0.8); margin-top:3px; }
+
+    .nav { display:flex; flex-direction:column; gap:6px; margin-top:6px;}
+    .nav button { text-align:left; padding:10px 12px; border-radius:8px; background:transparent; color:rgba(255,255,255,0.95); border:none; cursor:pointer; font-weight:600; }
+    .nav button:hover { background: rgba(255,255,255,0.06); }
+    
+    /* নতুন: রিকোয়েস্টের জন্য স্টাইল */
+    .request-nav-btn {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .request-badge {
+        background: #f87171; /* red-400 */
+        color: white;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        margin-left: 10px;
+    }
+
+
+    .sidebar-bottom { margin-top:auto; font-size:13px; color:rgba(255,255,255,0.9); display:flex; gap:10px; align-items:center; justify-content:space-between; }
+    .logout { background:#ff6b6b; border:none; padding:8px 12px; border-radius:8px; color:white; cursor:pointer; font-weight:700; }
+
+    /* Content area */
+    .content {
+      flex:1;
+      padding: 22px;
+      box-sizing:border-box;
+      background: linear-gradient(rgba(255,255,255,0.86), rgba(255,255,255,0.92));
+      overflow-x: auto;
+    }
+
+    .top-row { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:18px; }
+    .title { font-size:20px; font-weight:800; color:#0b2545; display:flex; gap:10px; align-items:center; }
+    .search {
+      display:flex; align-items:center; gap:8px;
+      background:#f3f6fb; padding:8px 10px; border-radius:12px; border:1px solid rgba(15,23,42,0.04);
+    }
+    .search input { border:none; outline:none; background:transparent; width:260px; font-size:14px; color:#1f2937; }
+
+    /* Stats cards */
+    .cards { display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; margin-bottom:16px; }
+    .stat { background: linear-gradient(180deg, var(--glass), rgba(255,255,255,0.98)); border-radius:12px; padding:16px; box-shadow: 0 6px 18px rgba(10,15,30,0.04); display:flex; justify-content:space-between; align-items:center; }
+    .stat .left {font-size:12px; color:var(--muted); font-weight:700; margin-bottom:6px; }
+    .stat .label { font-size:12px; color:var(--muted); font-weight:700; margin-bottom:6px; }
+    .stat .value { font-size:20px; font-weight:900; color:#0b2545; }
+    .stat .delta { font-size:11px; color:green; margin-top:6px; }
+    .stat .icon { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border-radius:10px; color:white; font-weight:800; }
+
+    .ic-1{ background: linear-gradient(135deg,#06b6d4,#4f46e5); }
+    .ic-2{ background: linear-gradient(135deg,#fb7185,#f97316); }
+    .ic-3{ background: linear-gradient(135deg,#34d399,#06b6d4); }
+    .ic-4{ background: linear-gradient(135deg,#a78bfa,#7dd3fc); }
+
+    /* grid for charts and lists */
+    .grid-area {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: start;
+    }
+    .grid-area > div {
+      flex: 1;
+      min-width: 550px;
+    }
+
+    .panel { background:var(--card-bg); padding:14px; border-radius:12px; box-shadow: 0 6px 18px rgba(10,15,30,0.04); }
+
+    .panel h3 { margin:0 0 8px 0; color:#0b2545; font-size:16px; }
+
+    /* small stats row inside right column */
+    .mini-stats { display:grid; grid-template-columns: repeat(2, 1fr); gap:10px; margin-bottom:10px; }
+    .mini { background:#fbfbff; padding:10px; border-radius:8px; display:flex; gap:10px; align-items:center; justify-content:space-between; border:1px solid rgba(10,15,30,0.03); }
+    .mini .num { font-weight:800; color:#0b2545; }
+
+    /* teacher list and buttons */
+    .teacher-actions { display:flex; gap:10px; align-items:center; margin-bottom:10px; }
+    .btn { padding:8px 12px; border-radius:10px; border:none; cursor:pointer; font-weight:700; }
+    .btn-primary { background:var(--accent-1); color:white; }
+    .btn-ghost { background:transparent; border:1px solid rgba(10,15,30,0.06); color:#0b2545; }
+
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { text-align:left; padding:8px 10px; border-bottom:1px solid rgba(10,15,30,0.04); }
+    th { color:var(--muted); font-size:12px; font-weight:700; }
+
+    .action-elim { background:#ff6b6b; color:white; padding:6px 8px; border-radius:8px; border:none; cursor:pointer; font-weight:700; }
+    .action-add { background:#10b981; color:white; padding:6px 8px; border-radius:8px; border:none; cursor:pointer; font-weight:700; }
+
+    /* small helpers */
+    .right-top { display:flex; gap:10px; align-items:center; }
+    .badge { background:#eef2ff; color:var(--accent-1); padding:6px 8px; border-radius:999px; font-weight:700; font-size:12px; }
+
+    /* responsive */
+    @media (max-width:1100px){
+      .cards { grid-template-columns: repeat(2,1fr); }
+      .grid-area { grid-template-columns: 1fr; }
+      .sidebar { display:none; }
+      .wrap { margin:10px; border-radius:10px; }
+    }
+
+    /* specific adjustments for new chart */
+    .mini-chart-container {
+      max-width: 400px;
+      height: 180px; /* Smaller height */
+      margin: 0 auto 12px auto;
+    }
+    
+    /* ⭐ NEW: Payment Status Badges */
+    .payment-status-badge {
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        display: inline-block;
+    }
+
+    .payment-status-paid {
+        background: #d1fae5; /* green-100 */
+        color: #065f46; /* green-700 */
+    }
+
+    .payment-status-unpaid {
+        background: #fee2e2; /* red-100 */
+        color: #991b1b; /* red-700 */
+    }
+
+    .payment-status-pending {
+        background: #fffbeb; /* yellow-100 */
+        color: #92400e; /* yellow-700 */
+    }
+    
+    /* ⭐ NEW: Static Report/Note Styles */
+    .note-panel {
+        background: var(--card-bg);
+        border: 1px solid #e2e8f0; /* slato-200 */
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: var(--shadow);
+    }
+    .note-panel h4 {
+        margin: 0 0 10px 0;
+        color: var(--accent-1);
+        font-size: 18px;
+        border-bottom: 2px solid #e0e7ff; /* indigo-100 */
+        padding-bottom: 5px;
+        font-weight: 800;
+    }
+    .note-list {
+        list-style: none;
+        padding-left: 0;
+        margin-top: 15px;
+        border-top: 1px solid #f1f5f9;
+        padding-top: 10px;
+    }
+    .note-list li {
+        margin-bottom: 8px;
+        padding: 6px 0;
+        color: #334155; /* slate-700 */
+        font-size: 14px;
+        display: flex;
+        align-items: flex-start;
+    }
+    .note-list.numbered {
+        list-style: decimal;
+        padding-left: 20px;
+    }
+    .note-list.numbered li {
+        margin-bottom: 12px;
+    }
+    .note-icon {
+        color: #10b981; /* emerald-500 */
+        margin-right: 10px;
+        font-weight: 700;
+        font-size: 16px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="wrap">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand"></div>
+
+      <div class="profile">
+        <img src="{% static 'images/profile.jpg' %}" id="adminProfile" alt="Profile">
+        <div>
+          <div class="name" id="profileName">Admin</div>
+          <div class="role">Administrator</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button onclick="window.location.href='{% url 'admin_dashboard' %}'" class="{% if active_view == 'dashboard' %}active{% endif %}">Dashboard</button>
+        <button onclick="window.location.href='{% url 'admin_teacher_update' %}'" class="{% if active_view == 'teacherUpdate' %}active{% endif %}">Teacher Update</button>
+        <button onclick="window.location.href='{% url 'admin_student_management' %}'" class="{% if active_view == 'studentManagement' %}active{% endif %}">Student Management</button>
+        
+        <button onclick="window.location.href='{% url 'admin_teachers_list' %}'" class="{% if active_view == 'registeredTeachers' %}active{% endif %}">Registered Teachers</button>
+        <button onclick="window.location.href='{% url 'admin_students_list' %}'" class="{% if active_view == 'registeredStudents' %}active{% endif %}">Registered Students</button>
+        
+        <button onclick="window.location.href='{% url 'admin_registration_requests' %}'" class="request-nav-btn {% if active_view == 'registrationRequests' %}active{% endif %}">
+            <span>Registration Requests</span>
+            {% if pending_requests_count and pending_requests_count > 0 %}
+                <span class="request-badge">{{ pending_requests_count }}</span>
+            {% endif %}
+        </button>
+        
+        {# ⭐ Payment Detail এর জন্য Django URL ব্যবহার করা হলো #}
+        <button onclick="window.location.href='{% url 'admin_payment_detail' %}'" class="{% if active_view == 'paymentDetail' %}active{% endif %}">Payment Detail</button>
+        
+        {# অন্যান্য ভিউ - "Student List" রিমুভ করা হয়েছে, "Reports" উপরে আনা হয়েছে #}
+        <button onclick="showView('reports')">Reports</button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div style="font-size:13px;opacity:0.95;">v1.0 • School</div>
+        <button class="logout" onclick="window.location.href='{% url 'logout_user'%}'">Log Out</button>
+      </div>
+    </aside>
+
+    <main class="content">
+      {# activeViewFlag ব্যবহার করে কোন ভিউটি লোড হবে তা নিশ্চিত করা হলো #}
+      <input type="hidden" id="activeViewFlag" value="{{ active_view|default:'dashboard' }}" />
+
+      <div id="view-dashboard" style="{% if active_view != 'dashboard' %}display:none;{% endif %}">
+        <div class="top-row">
+          <div class="title">Dashboard</div>
+          <div class="right-top">
+            <div class="search">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.35-4.35" stroke="#1f2937" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <input placeholder="Search..." />
+            </div>
+            <div class="badge">English</div>
+          </div>
+        </div>
+
+        <div class="cards">
+          <div class="stat panel">
+            <div class="left">
+              <div class="label">Total Students</div>
+              <div class="value" id="totalStudents">4,586</div>
+              <div class="delta">↑ 10.32% Since last week</div>
+            </div>
+            <div class="icon ic-1">👩‍🎓</div>
+          </div>
+
+          <div class="stat panel">
+            <div class="left">
+              <div class="label">New Students</div>
+              <div class="value" id="newStudents">323</div>
+              <div class="delta" style="color:green;">↑ 21.18% Since last week</div>
+            </div>
+            <div class="icon ic-2">✨</div>
+          </div>
+
+          <div class="stat panel">
+            <div class="left">
+              <div class="label">Total Courses</div>
+              <div class="value" id="totalCourses">103</div>
+              <div class="delta" style="color:#ef4444;">↓ 10.64% Since last week</div>
+            </div>
+            <div class="icon ic-3">📚</div>
+          </div>
+
+          <div class="stat panel">
+            <div class="left">
+              <div class="label">Visitors</div>
+              <div class="value" id="visitors">2,352</div>
+              <div class="delta" style="color:#ef4444;">↓ 4.27% Since last week</div>
+            </div>
+            <div class="icon ic-4">👁️</div>
+          </div>
+        </div>
+
+        <div class="grid-area">
+
+          <div class="panel">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <h3>Overview Charts</h3>
+                <div style="display:flex; gap:8px;">
+                  <button class="btn btn-ghost" onclick="downloadCharts()">Export</button>
+                  <button class="btn btn-ghost" onclick="toggleFullScreen()">Full</button>
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px;">
+                <div style="background:#fbfbff; padding:12px; border-radius:10px;">
+                  <canvas id="studentEnrollmentChart" style="height:160px"></canvas>
+                </div>
+                <div style="background:#fbfbff; padding:12px; border-radius:10px;">
+                  <canvas id="feesChart" style="height:160px"></canvas>
+                </div>
+                <div style="background:#fbfbff; padding:12px; border-radius:10px;">
+                  <canvas id="teacherStudentChart" style="height:160px"></canvas>
+                </div>
+              </div>
+
+              <div style="display:flex; gap:12px; align-items:flex-start; margin-top:12px;">
+                <div style="flex:1;">
+                  <h3>Subject Marks Chart</h3>
+                  <canvas id="subjectMarksChart" style="height:220px"></canvas>
+                </div>
+
+                <div style="width:320px;">
+                  <h3>Gender Distribution</h3>
+                  <canvas id="genderDonut" style="height:160px; margin-bottom:12px;"></canvas>
+
+                  <h3 style="margin-top:8px;">Teacher / Student / Staff (%)</h3>
+                  <canvas id="rolePie" style="height:120px"></canvas>
+                </div>
+              </div>
+          </div>
+
+
+          <div class="panel">
+              <h3>Quick Stats</h3>
+              <div class="mini-stats">
+                <div class="mini"><div>Total Students</div><div class="num">4,586</div></div>
+                <div class="mini"><div>New Students</div><div class="num">323</div></div>
+                <div class="mini"><div>Total Course</div><div class="num">103</div></div>
+                <div class="mini"><div>Visitors</div><div class="num">2,352</div></div>
+              </div>
+
+              <h3 style="margin-top:8px;">People</h3>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <div style="background:#fbfbff;padding:10px;border-radius:8px;width:48%;box-sizing:border-box;">Teachers<br><strong style="font-size:18px;">78</strong></div>
+                <div style="background:#fbfbff;padding:10px;border-radius:8px;width:48%;box-sizing:border-box;">Staffs<br><strong style="font-size:18px;">24</strong></div>
+              </div>
+
+              <div style="margin-top:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <h3>Teachers</h3>
+                  <button class="btn btn-primary" onclick="window.location.href='{% url 'admin_teacher_update' %}'">Teacher Update</button>
+                </div>
+
+                <div style="margin-top:8px;">
+                  <table>
+                    <thead>
+                      <tr><th>Name</th><th>ID</th><th>Subject</th></tr>
+                    </thead>
+                    <tbody id="miniTeacherList">
+                      </tbody>
+                  </table>
+                </div>
+
+                <div style="margin-top:10px; text-align:right;"><button class="btn btn-ghost" onclick="window.location.href='{% url 'admin_teacher_update' %}'">Manage All</button></div>
+              </div>
+          </div>
+
+        </div>
+
+      </div> 
+      
+      {# Student Management View #}
+      <div id="view-studentManagement" style="{% if active_view != 'studentManagement' %}display:none;{% endif %}">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h2 style="margin:0;">Student Management</h2>
+          <div>
+            <button class="btn btn-ghost" onclick="showView('dashboard')">Back to Dashboard</button>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:12px;">
+            <div class="teacher-actions">
+                <button class="btn btn-primary" onclick="openAddStudentForm()">＋ Add New Student</button>
+                <button class="btn btn-ghost" onclick="loadDummyStudents()">Reload Dummy</button>
+            </div>
+
+            <div id="studentTableWrap">
+                <table>
+                    <thead>
+                        <tr><th></th><th>Name</th><th>ID</th><th>Class</th><th>Section</th><th>Roll</th><th>Action</th></tr>
+                    </thead>
+                    
+                    {# ডাইনামিক ডেটা লোড করা হলো #}
+                    <tbody>
+                        {% for student in all_students %}
+                        <tr>
+                            <td><input type="checkbox" /></td>
+                            <td>{{ student.first_name }} {{ student.last_name }}</td>
+                            <td>{{ student.student_id }}</td>
+                            <td>{{ student.class_name }}</td>
+                            <td>{{ student.section }}</td>
+                            <td>{{ student.roll_number }}</td>
+                            {# AJAX call to eliminate_student for real DB soft-delete #}
+                            <td><button class="action-elim" onclick="eliminateStudentAjax('{{ student.student_id }}')">Eliminate</button></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" style="text-align:center;color:var(--muted);padding:14px;">No students available in the database.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="addStudentForm" style="display:none; margin-top:12px; background:#fafafa; padding:12px; border-radius:10px;">
+                <h4 style="margin:0 0 8px 0;">Add New Student</h4>
+                <div style="display:flex; gap:8px; margin-bottom:8px;">
+                    <input id="sName" placeholder="Name" style="flex:1; padding:8px; border-radius:8px; border:1px solid #e6e6e6;" />
+                    <input id="sClass" placeholder="Class (e.g., 8)" style="width:80px; padding:8px; border-radius:8px; border:1px solid #e6e6e6;" />
+                    <input id="sSection" placeholder="Section (e.g., C)" style="width:80px; padding:8px; border-radius:8px; border:1px solid #e6e6e6;" />
+                    <input id="sRoll" placeholder="Roll (e.g., 20)" style="width:80px; padding:8px; border-radius:8px; border:1px solid #e6e6e6;" />
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <span style="color:var(--muted); font-size:12px;">*ID will be auto-generated (e.g., 8C20)</span>
+                    <button class="action-add" onclick="addNewStudent()">Add</button>
+                    <button class="btn btn-ghost" onclick="closeAddStudentForm()">Cancel</button>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      {# Registered Teachers View #}
+      <div id="view-registeredTeachers" style="{% if active_view != 'registeredTeachers' %}display:none;{% endif %}">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h2 style="margin:0;">Registered Teachers List</h2>
+          <div>
+             <button class="btn btn-ghost" onclick="window.location.href='{% url 'admin_teacher_update' %}'">Go to Teacher Update</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <p style="color:var(--muted); margin:0;">This page displays the list of all active teachers, including their login passwords.</p>
+          <div id="registeredTeacherList" style="margin-top:12px;">
+             
+             <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Designation</th>
+                        <th>Subject</th>
+                        <th>Email</th>
+                        <th>Password</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for teacher in all_teachers %}
+                    <tr>
+                        <td>{{ teacher.teacher_id }}</td>
+                        <td>{{ teacher.first_name }} {{ teacher.last_name }}</td>
+                        <td>{{ teacher.designation }}</td>
+                        <td>{{ teacher.subject_taught }}</td>
+                        <td>{{ teacher.email }}</td>
+                        <td><code style="background:#f1f5f9; padding:4px 6px; border-radius:4px; font-size:12px;">{{ teacher.password }}</code></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align:center;color:var(--muted);padding:14px;">No registered teachers found in the database.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+             </table>
+             </div>
+        </div>
+      </div>
+
+      {# Registered Students View #}
+      <div id="view-registeredStudents" style="{% if active_view != 'registeredStudents' %}display:none;{% endif %}">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h2 style="margin:0;">Registered Students List</h2>
+          <div>
+            <button class="btn btn-ghost" onclick="window.location.href='{% url 'admin_student_management' %}'">Go to Student Management</button>
+          </div>
+        </div>
+        <div class="panel">
+          <p style="color:var(--muted); margin:0;">This page displays the list of all active students, including their login passwords.</p>
+          <div id="registeredStudentList" style="margin-top:12px;">
+             <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Class</th>
+                        <th>Section</th>
+                        <th>Roll</th>
+                        <th>Password</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in all_students %}
+                    <tr>
+                        <td>{{ student.student_id }}</td>
+                        <td>{{ student.first_name }} {{ student.last_name }}</td>
+                        <td>{{ student.class_name }}</td>
+                        <td>{{ student.section }}</td>
+                        <td>{{ student.roll_number }}</td>
+                        <td><code style="background:#f1f5f9; padding:4px 6px; border-radius:4px; font-size:12px;">{{ student.password }}</code></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align:center;color:var(--muted);padding:14px;">No registered students found in the database.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+             </table>
+             
+          </div>
+        </div>
+      </div>
+
+      {# Registration Requests View #}
+      <div id="view-registrationRequests" style="{% if active_view != 'registrationRequests' %}display:none;{% endif %}">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h2 style="margin:0;">Registration Requests</h2>
+          <div>
+            <button class="btn btn-ghost" onclick="window.location.href='{% url 'admin_dashboard' %}'">Back to Dashboard</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <p style="color:var(--muted); margin:0;">Below is the list of pending requests from new users. Accept or Eliminate to manage accounts.</p>
+          
+          <div id="registrationRequestList" style="margin-top:12px;">
+             <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Requested Role</th>
+                        <th>ID/Class Info</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for request in pending_requests %}
+                    <tr>
+                        <td style="color:var(--muted)">{{ request.requested_at|date:"M d, Y" }}</td>
+                        <td>{{ request.full_name }}</td>
+                        <td>{{ request.email }}</td>
+                        <td>{{ request.requested_role }}</td>
+                        <td style="font-size:12px;color:#374151;">
+                            {% if request.requested_role == 'Student' %}
+                                Class: {{ request.class_name }}{{ request.section }}, Roll: {{ request.roll_no }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="action-add" onclick="acceptRequest('{{ request.pk }}')">Accept & Create ID</button>
+                            <button class="action-elim" onclick="rejectRequest('{{ request.pk }}')">Eliminate</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align:center;color:var(--muted);padding:14px;">No pending registration requests.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+             </table>
+          </div>
+        </div>
+      </div>
+      
+      {# Teacher Update View #}
+      <div id="view-teacherUpdate" style="{% if active_view != 'teacherUpdate' %}display:none;{% endif %}">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h2 style="margin:0;">Teacher Update</h2>
+          <div>
+            <button class="btn btn-ghost" onclick="showView('dashboard')">Back to Dashboard</button>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:12px;">
+          <div class="teacher-actions">
+            <button class="btn btn-primary" onclick="openAddTeacherForm()">＋ Add New Teacher</button>
+            <button class="btn btn-ghost" onclick="loadDummyTeachers()">Reload Dummy</button>
+          </div>
+
+          <div id="teacherTableWrap">
+            <table>
+              <thead>
+                <tr><th></th><th>Name</th><th>ID</th><th>Qualification</th><th>Subject</th><th>Action</th></tr>
+              </thead>
+              
+              {# ডাইনামিক ডেটা লোড করা হলো #}
+              <tbody>
+                {% for teacher in all_teachers %}
+                <tr>
+                    <td><input type="checkbox" /></td>
+                    <td>{{ teacher.first_name }} {{ teacher.last_name }}</td>
+                    <td>{{ teacher.teacher_id }}</td>
+                    <td>{{ teacher.designation }}</td> {# assuming designation field holds qualification #}
+                    <td>{{ teacher.subject_taught }}</td>
+                    {# AJAX call to eliminate_teacher for real DB soft-delete #}
+                    <td><button class="action-elim" onclick="eliminateTeacherAjax('{{ teacher.teacher_id }}')">Eliminate</button></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align:center;color:var(--muted);padding:14px;">No teachers available in the database.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <div id="addTeacherForm" style="display:none; margin-top:12px; background:#fafafa; padding:12px; border-radius:10px;">
+            <h4 style="margin:0 0 8px 0;">Add New Teacher</h4>
+            <div style="display:flex; gap:8px; margin-bottom:8px;">
+              <input id="tName" placeholder="Name" style="flex:1; padding:8px; border-radius:8px; border:1px solid #e6e6e6;" />
+              <input id="tId" placeholder="ID (e.g., T101)" style="width:120px; padding:8px; border-radius:8px; border:1px solid #e6e6e6;" />
+              <input id="tQual" placeholder="Qualification" style="width:160px; padding:8px; border-radius:8px; border:1px solid #e6e6e6;" />
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input id="tSub" placeholder="Subject" style="padding:8px; border-radius:8px; border:1px solid #e6e6e6;" />
+              <button class="action-add" onclick="addNewTeacher()">Add</button>
+              <button class="btn btn-ghost" onclick="closeAddTeacherForm()">Cancel</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {# ⭐ NEW: Payment Details View - ডাইনামিক ডেটা লোড করার জন্য এই সেকশনটি পরিবর্তন করা হলো #}
+      <div id="view-paymentDetails" style="{% if active_view != 'paymentDetail' %}display:none;{% endif %}">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h2 style="margin:0;">Payment Details - Student Status</h2>
+          <div>
+            {# এটি একটি Django-রেন্ডার্ড ভিউ, তাই এটি ড্যাশবোর্ডে ফিরে যেতে পারে #}
+            <button class="btn btn-ghost" onclick="window.location.href='{% url 'admin_dashboard' %}'">Back to Dashboard</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          
+          {# ⭐ ডেমো বাটনগুলো রাখা হলো, পরে AJAX ফিল্টারিং-এ ব্যবহার করা যেতে পারে #}
+          <div style="display:flex; gap:8px; margin-bottom:12px;">
+            <button class="btn btn-primary">All Students</button>
+            <button class="btn btn-ghost">Filter Paid</button>
+            <button class="btn btn-ghost">Filter Unpaid</button>
+            <button class="btn btn-ghost">Filter Pending</button>
+            <span style="color:var(--muted); font-size:13px; display:flex; align-items:center;">(Showing **Active** Students only)</span>
+          </div>
+
+          <div id="paymentTableWrap" style="margin-top:8px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:15%;">Student ID</th>
+                        <th style="width:40%;">Student Name</th>
+                        <th style="width:25%;">Payment Status</th>
+                        <th style="width:20%;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {# 🚀 CORE CHANGE: payment_students ডেটা লুপ করে দেখানো হলো #}
+                    {% for student in payment_students %}
+                    <tr>
+                        <td>{{ student.student_id }}</td>
+                        <td>{{ student.first_name }} {{ student.last_name }}</td>
+                        <td>
+                            {# পেমেন্ট স্ট্যাটাসের উপর ভিত্তি করে CSS ক্লাস যুক্ত করা হলো #}
+                            {% if student.payment_status == 'Paid' %}
+                                <span class="payment-status-badge payment-status-paid">Paid</span>
+                            {% elif student.payment_status == 'Unpaid' %}
+                                <span class="payment-status-badge payment-status-unpaid">Unpaid</span>
+                            {% elif student.payment_status == 'Pending' %}
+                                <span class="payment-status-badge payment-status-pending">Pending</span>
+                            {% else %}
+                                <span class="payment-status-badge">Unknown</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-ghost" style="padding:6px 8px; font-size:12px; font-weight:600;">View History</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="text-align:center;color:var(--muted);padding:14px;">No active students found with payment status details.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {# Student List View (Placeholder) #}
+      <div id="view-studentsList" style="{% if active_view != 'studentsList' %}display:none;{% endif %}">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h2 style="margin:0;">Student List (Placeholder)</h2>
+          <div><button class="btn btn-ghost" onclick="showView('dashboard')">Back</button></div>
+        </div>
+
+        <div class="panel">
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+                <button class="btn btn-primary" onclick="showStudents('high')">High School Students</button>
+                <button class="btn btn-ghost" onclick="showStudents('low')">Low School Students</button>
+            </div>
+            
+            <div class="mini-chart-container">
+                <canvas id="studentSchoolChart"></canvas>
+            </div>
+
+            <div id="studentTableWrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Roll</th>
+                            <th>Guardian Number</th>
+                            <th>Address</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+
+      {# 🚀 UPDATED: Reports View (Static Notes/Memos) #}
+      <div id="view-reports" style="{% if active_view != 'reports' %}display:none;{% endif %}">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h2 style="margin:0;">Internal Admin Notes & Memos</h2>
+          <div><button class="btn btn-ghost" onclick="showView('dashboard')">Back to Dashboard</button></div>
+        </div>
+        
+        <div class="note-panel">
+            <h4>💡 Important Directives for This Month</h4>
+            <p style="color:#5a6375; margin-bottom:0;">Below are the key operational notes and reminders for the administration team, manually updated in the HTML file.</p>
+            
+            <ul class="note-list numbered">
+                <li>**Finance:** All outstanding fees from Class 9 and 10 must be reconciled by the 25th.</li>
+                <li>**Teachers:** Schedule the performance review meeting for all senior teachers.</li>
+                <li>**Admissions:** Start preparing the prospectus for the new academic year enrollment drive.</li>
+                <li>**IT:** Check server logs for any unusual activity and optimize database queries.</li>
+            </ul>
+
+            <h4 style="margin-top:20px;">✅ Pending Tasks Checklist</h4>
+            <ul class="note-list" style="border-top:none; margin-top:0; padding-top:0;">
+                <li><span class="note-icon">◻️</span> Send bulk SMS regarding Parent-Teacher meeting on $28^{th}$ February.</li>
+                <li><span class="note-icon">◻️</span> Approve all pending registration requests from last week.</li>
+                <li><span class="note-icon">◻️</span> Review the supply order for the new Science lab equipment.</li>
+                <li><span class="note-icon">◻️</span> Follow up with the student who needs to resubmit their application form.</li>
+            </ul>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+<script>
+  // ---------- Simple navigation ----------
+  function showView(view) {
+    // 'paymentDetail' এখন সরাসরি URL/Django দ্বারা লোড হচ্ছে, তবে অন্যান্য ভিউগুলোর জন্য এটি কাজ করবে।
+    // 'studentsList' বাটনটি সাইডবার থেকে মুছে ফেলা হয়েছে, কিন্তু তার ভিউটি এখনও JS এ আছে।
+    const views = ['dashboard','teacherUpdate','studentManagement','registeredTeachers','registeredStudents','registrationRequests','paymentDetails','studentsList','reports'];
+    views.forEach(v=>{
+      const el = document.getElementById('view-'+v);
+      if(!el) return;
+      el.style.display = (v===view) ? '' : 'none';
+    });
+    
+    if(view==='dashboard') {
+      updateMiniList();
+    }
+    if(view==='studentsList') {
+        showStudents('high');
+        updateStudentSchoolChart();
+    }
+    // ⭐ NOTE: 'paymentDetails' এর জন্য showPayment() কলটি এখান থেকে সরিয়ে দেওয়া হয়েছে, কারণ এটি এখন URL দ্বারা লোড হবে।
+  }
+
+  // ---------- Local Storage Management for Data (Keeping for Student/Request Logic) ----------
+
+  // Load teachers from localStorage or use dummy data
+  function loadTeachersData() {
+    try {
+        const stored = localStorage.getItem('teachers');
+        // IMPORTANT: Ensure dummy data includes password for Login.html
+        return stored ? JSON.parse(stored) : [
+            {name:'Sneha Patel', id:'T-001', qual:'M.Com, PhD', subject:'Mathematics', password:'sneha-pass'},
+            {name:'Rajat Singh', id:'T-002', qual:'M.Sc', subject:'Science', password:'rajat-pass'},
+        ];
+    } catch(e) { return []; }
+  }
+  let teachers = loadTeachersData();
+  
+  function saveTeachersData() {
+      localStorage.setItem('teachers', JSON.stringify(teachers));
+  }
+  
+  // Load students from localStorage or use dummy data
+  function loadStudentsData() {
+    try {
+        const stored = localStorage.getItem('students');
+         // IMPORTANT: Ensure dummy data includes password for Login.html
+        return stored ? JSON.parse(stored) : [
+            {name:'Ruhan Ahmed', id:'8C20', class:'8', section:'C', roll:'20', password:'ruhan-pass'},
+            {name:'Zinia Akter', id:'5A01', class:'5', section:'A', roll:'01', password:'zinia-pass'},
+        ];
+    } catch(e) { return []; }
+  }
+  let students = loadStudentsData();
+
+  function saveStudentsData() {
+      localStorage.setItem('students', JSON.stringify(students));
+  }
+  
+  // ---------- Teacher Data and Functions (Keeping local storage for TeacherUpdate view) ----------
+
+  function loadDummyTeachers(){
+    // Reload Dummy Button Still works, but only for the *local storage* demo data
+    teachers = [
+      {name:'Sneha Patel', id:'T-001', qual:'M.Com, PhD', subject:'Mathematics', password:'sneha-pass'},
+      {name:'Rajat Singh', id:'T-002', qual:'M.Sc', subject:'Science', password:'rajat-pass'},
+    ];
+    saveTeachersData(); // Save to localStorage
+    updateMiniList();
+    alert("Dummy data loaded to local storage. Refresh the page to see the database data again.");
+  }
+
+  // NEW AJAX FUNCTION: Eliminate teacher from Django DB
+  function eliminateTeacherAjax(teacherIdToEliminate){
+    if(!confirm(`Are you sure you want to eliminate Teacher ID ${teacherIdToEliminate}? This uses AJAX to call the eliminate_teacher URL.`)) return;
+    
+    // CSRF টোকেন লোড করা
+    const csrftoken = getCookie('csrftoken');
+
+    fetch('{% url 'ajax_eliminate_teacher' %}', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/x-www-form-urlencoded', 
+            'X-CSRFToken': csrftoken 
+        },
+        body: new URLSearchParams({ 
+            'teacher_id': teacherIdToEliminate 
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.status === 'success') {
+            alert(`Teacher ID ${teacherIdToEliminate} eliminated successfully. Refreshing page...`);
+            // সফল হলে পেজ রিফ্রেশ করে নতুন ডেটা লোড করা
+            window.location.reload(); 
+        } else {
+            alert('Error eliminating teacher: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        alert('A network error occurred while eliminating the teacher.');
+    });
+  }
+
+  function openAddTeacherForm(){
+    document.getElementById('addTeacherForm').style.display = '';
+    document.getElementById('tName').value=''; document.getElementById('tId').value=''; document.getElementById('tQual').value=''; document.getElementById('tSub').value='';
+  }
+  function closeAddTeacherForm(){
+    document.getElementById('addTeacherForm').style.display = 'none';
+  }
+  function addNewTeacher(){
+    const name = document.getElementById('tName').value.trim();
+    const id = document.getElementById('tId').value.trim();
+    const qual = document.getElementById('tQual').value.trim();
+    const sub = document.getElementById('tSub').value.trim();
+    
+    // IMPORTANT: Ask Admin to set a unique password during manual add
+    const password = prompt("Enter a unique password for this new teacher (Will not be saved to DB in this demo):");
+    if(!password){ alert("Teacher addition canceled (Password not set)."); return; }
+    
+    if(!name || !id){ alert('Name and ID required (use dummy values).'); return; }
+    
+    // NOTE: Since we are using Django rendering, manually added teachers here will only update the local storage array.
+    teachers.push({name, id, qual, subject: sub, password: password});
+    saveTeachersData(); // Save to localStorage
+    closeAddTeacherForm();
+    updateMiniList();
+    alert(`Teacher added to local demo storage! ID: ${id}. Please implement Django AJAX submission to make it permanent.`);
+  }
+  
+  function updateMiniList(){
+    const tbody = document.getElementById('miniTeacherList');
+    // NOTE: This mini list still uses local storage data for quick display
+    tbody.innerHTML='';
+    for(let i=0;i<Math.min(3, teachers.length); i++){
+      const t = teachers[i];
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td style="padding:6px 10px;">${t.name}</td><td style="padding:6px 10px;color:var(--muted)">${t.id}</td><td style="padding:6px 10px;color:var(--muted)">${t.subject || ''}</td>`;
+      tbody.appendChild(tr);
+    }
+    if(teachers.length===0){
+      tbody.innerHTML = '<tr><td colspan="3" style="color:var(--muted);padding:10px;">No teachers</td></tr>';
+    }
+  }
+
+  // ---------- Student Data and Functions (Keeping local storage for Student views) ----------
+
+  function loadDummyStudents(){
+    // Reload Dummy Button Still works, but only for the *local storage* demo data
+    students = [
+      {name:'Ruhan Ahmed', id:'8C20', class:'8', section:'C', roll:'20', password:'ruhan-pass'},
+      {name:'Zinia Akter', id:'5A01', class:'5', section:'A', roll:'01', password:'zinia-pass'},
+    ];
+    saveStudentsData(); // Save to localStorage
+    alert("Dummy data loaded to local storage. Refresh the page to see the database data again.");
+  }
+  
+  // NEW AJAX FUNCTION: Eliminate student from Django DB
+  function eliminateStudentAjax(studentIdToEliminate){
+    if(!confirm(`Are you sure you want to eliminate Student ID ${studentIdToEliminate}? This uses AJAX to call the eliminate_student URL.`)) return;
+    
+    // CSRF টোকেন লোড করা
+    const csrftoken = getCookie('csrftoken');
+
+    fetch('{% url 'ajax_eliminate_student' %}', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/x-www-form-urlencoded', 
+            'X-CSRFToken': csrftoken 
+        },
+        body: new URLSearchParams({ 
+            'student_id': studentIdToEliminate 
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.status === 'success') {
+            alert(`Student ID ${studentIdToEliminate} eliminated successfully. Refreshing page...`);
+            // সফল হলে পেজ রিফ্রেশ করে নতুন ডেটা লোড করা
+            window.location.reload(); 
+        } else {
+            alert('Error eliminating student: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        alert('A network error occurred while eliminating the student.');
+    });
+  }
+
+  function openAddStudentForm(){
+    document.getElementById('addStudentForm').style.display = '';
+    document.getElementById('sName').value=''; document.getElementById('sClass').value=''; document.getElementById('sSection').value=''; document.getElementById('sRoll').value='';
+  }
+  function closeAddStudentForm(){
+    document.getElementById('addStudentForm').style.display = 'none';
+  }
+  function addNewStudent(){
+    const name = document.getElementById('sName').value.trim();
+    const sClass = document.getElementById('sClass').value.trim();
+    const section = document.getElementById('sSection').value.trim().toUpperCase();
+    const roll = document.getElementById('sRoll').value.trim();
+    
+    const password = prompt("Enter a unique password for this new student (Will not be saved to DB in this demo):");
+    if(!password){ alert("Student addition canceled (Password not set)."); return; }
+    
+    if(!name || !sClass || !section || !roll){ 
+        alert('All fields (Name, Class, Section, Roll) are required.'); 
+        return; 
+    }
+    
+    const id = `${sClass}${section}${roll.padStart(2, '0')}`;
+
+    // NOTE: Similar to teachers, this only updates local storage.
+    students.push({name, id, class: sClass, section, roll: roll.padStart(2, '0'), password: password});
+    saveStudentsData(); // Save to localStorage
+    closeAddStudentForm();
+    alert(`Student added to local demo storage! ID: ${id}. Please implement Django AJAX submission to make it permanent.`);
+  }
+
+  // --- UPDATED: Student List with Password (Kept for local storage fallback/demo) ---
+  function renderRegisteredStudentList() {
+      const wrap = document.getElementById('registeredStudentList');
+      // Django context is used now, so local storage list is only for fallback/demo
+  }
+  
+  // ---------- NEW: Registration Request AJAX Functions ----------
+
+  function processRegistrationAction(requestId, actionType) {
+      if (actionType === 'reject' && !confirm("Are you sure you want to reject this request?")) {
+          return;
+      }
+      
+      let password = '';
+      // NOTE: Password check is handled in views.py now, this is kept for user input
+      if (actionType === 'accept') {
+          // No need to prompt, as password will be set to a default in Django views.
+          // Optional: If you want to allow admin to set a custom password:
+          // password = prompt("Enter a unique password for this new user (Default: 123456):");
+      }
+
+      const csrftoken = getCookie('csrftoken');
+      
+      const url = actionType === 'accept' 
+                  ? `{% url 'ajax_accept_request' pk=0 %}`.replace('0', requestId) 
+                  : `{% url 'ajax_reject_request' pk=0 %}`.replace('0', requestId);
+
+      fetch(url, {
+          method: 'POST',
+          headers: { 
+              'Content-Type': 'application/x-www-form-urlencoded', 
+              'X-CSRFToken': csrftoken 
+          },
+          body: new URLSearchParams({ 
+              // Sending the password (if manually collected)
+              'password': password 
+          })
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.status === 'success') {
+              // The success message now comes from Django's messages framework via page reload
+              window.location.reload(); 
+          } else {
+              alert('Error: ' + data.message);
+          }
+      })
+      .catch(error => {
+          console.error('Fetch error:', error);
+          alert('A network error occurred while processing the request.');
+      });
+  }
+
+  function acceptRequest(requestId) {
+      processRegistrationAction(requestId, 'accept');
+  }
+
+  function rejectRequest(requestId) {
+      processRegistrationAction(requestId, 'reject');
+  }
+  
+  // ---------- End Registration Request Functions ----------
+
+
+  // ---------- Payment view (Existing Local Demo Data - Removed) ----------
+  // ⭐ REMOVED local demo data and showPayment() function since data is now Django-rendered.
+  
+  // ---------- Student List View (Existing) ----------
+  const highSchoolStudents = [
+    { name: 'Rahim Khan', roll: '101', guardian: '017xxxxxx', address: 'Dhaka, Bangladesh' },
+    { name: 'Sumi Akter', roll: '102', guardian: '018xxxxxx', address: 'Chittagong, Bangladesh' },
+    { name: 'Karim Ahmed', roll: '103', guardian: '019xxxxxx', address: 'Sylhet, Bangladesh' }
+  ];
+
+  const lowSchoolStudents = [
+    { name: 'Tarek Hasan', roll: '201', guardian: '015xxxxxx', address: 'Rajshahi, Bangladesh' },
+    { name: 'Nisha Islam', roll: '202', guardian: '016xxxxxx', address: 'Khulna, Bangladesh' }
+  ];
+  
+  let studentChartInstance = null;
+  function updateStudentSchoolChart() {
+      const ctx = document.getElementById('studentSchoolChart').getContext('2d');
+      if (studentChartInstance) {
+          studentChartInstance.destroy();
+      }
+      studentChartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+              labels: ['High School', 'Low School'],
+              datasets: [{
+                  label: 'Number of Students',
+                  data: [highSchoolStudents.length, lowSchoolStudents.length],
+                  backgroundColor: ['rgba(79,70,229,0.9)', 'rgba(14,165,233,0.85)'],
+                  borderRadius: 6
+              }]
+          },
+          options: {
+              responsive: true,
+              plugins: { legend: { display: false } },
+              scales: {
+                  y: { beginAtZero: true }
+              }
+          }
+      });
+  }
+
+  function showStudents(schoolType) {
+    const tbody = document.getElementById('studentTableBody');
+    tbody.innerHTML = '';
+    const students = schoolType === 'high' ? highSchoolStudents : lowSchoolStudents;
+    
+    if (students.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:14px;">No students found</td></tr>';
+    } else {
+      students.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${s.name}</td>
+          <td>${s.roll}</td>
+          <td>${s.guardian}</td>
+          <td>${s.address}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+  }
+
+  // ---------- Charts (Chart.js) (Existing) ----------
+
+  const enrollmentLabels = ['Nursery','KG','Class 1','Class 2','Class 3','Class 4','Class 5','Class 6','Class 7','Class 8','Class 9','Class 10'];
+  const enrollmentData = [30,28,45,50,60,48,58,450,520,480,600,550]; 
+
+  const ctxEnroll = document.getElementById('studentEnrollmentChart').getContext('2d');
+  const studentEnrollmentChart = new Chart(ctxEnroll, {
+    type:'bar',
+    data:{
+      labels: enrollmentLabels,
+      datasets:[{
+        label:'Students',
+        data: enrollmentData,
+        backgroundColor: enrollmentLabels.map((_,i)=> (i%2? 'rgba(79,70,229,0.9)':'rgba(14,165,233,0.85)')),
+        borderRadius:6
+      }]
+    },
+    options:{
+      responsive:true,
+      plugins:{ legend:{ display:false } },
+      scales:{
+        x:{ ticks:{ maxRotation:0 } },
+        y:{ beginAtZero:true }
+      }
+    }
+  });
+
+  const ctxFees = document.getElementById('feesChart').getContext('2d');
+  const feesChart = new Chart(ctxFees, {
+    type:'doughnut',
+    data:{
+      labels:['Confirmed','Due'],
+      datasets:[{ data:[85,15], backgroundColor:['rgba(79,70,229,0.9)','rgba(239,68,68,0.9)'], hoverOffset:6 }]
+    },
+    options:{ responsive:true, plugins:{ legend:{ position:'top' } } }
+  });
+
+  const ctxTS = document.getElementById('teacherStudentChart').getContext('2d');
+  const teacherStudentChart = new Chart(ctxTS, {
+    type:'line',
+    data:{
+      labels:['Jan','Feb','Mar','Apr','May','Jun'],
+      datasets:[{
+        label:'Students per Teacher',
+        data:[30,28,25,27,26,29],
+        borderColor:'rgba(14,165,233,0.9)',
+        tension:0.3,
+        fill:false,
+        pointRadius:3
+      }]
+    },
+    options:{ responsive:true, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true } } }
+  });
+
+  const ctxSub = document.getElementById('subjectMarksChart').getContext('2d');
+  const subjectMarksChart = new Chart(ctxSub, {
+    type:'line',
+    data:{
+      labels:['Jan','Feb','Mar','Apr','May','Jun','Jul'],
+      datasets:[
+        { label:'Math', data:[12,30,22,34,26,38,24], borderColor:'rgba(79,70,229,0.9)', tension:0.3, pointStyle:'rectRounded' },
+        { label:'Science', data:[8,26,18,28,22,34,20], borderColor:'rgba(234,88,12,0.9)', tension:0.3, pointStyle:'triangle' },
+        { label:'Geography', data:[6,20,14,24,18,30,16], borderColor:'rgba(16,185,129,0.9)', tension:0.3, pointStyle:'circle' }
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{ legend:{ position:'top' } },
+      scales:{ y:{ beginAtZero:true } }
+    }
+  });
+
+  const ctxGender = document.getElementById('genderDonut').getContext('2d');
+  const genderDonut = new Chart(ctxGender, {
+    type:'doughnut',
+    data:{
+      labels:['Male','Female'],
+      datasets:[{ data:[52,48], backgroundColor:['rgba(59,130,246,0.9)','rgba(236,72,153,0.9)'] }]
+    },
+    options:{ responsive:true, plugins:{ legend:{ position:'bottom' } } }
+  });
+
+  const ctxRole = document.getElementById('rolePie').getContext('2d');
+  const rolePie = new Chart(ctxRole, {
+    type:'pie',
+    data:{
+      labels:['Teachers','Students','Staff'],
+      datasets:[{ data:[6,86,8], backgroundColor:['rgba(99,102,241,0.95)','rgba(14,165,233,0.9)','rgba(16,185,129,0.95)'] }]
+    },
+    options:{ responsive:true, plugins:{ legend:{ position:'bottom' } } }
+  });
+  
+  // A helper function to get CSRF token from cookies
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+  }
+
+  // ---------- small helpers ----------
+  function downloadCharts(){
+    alert('Export not implemented in local demo. Copy charts code to implement export.');
+  }
+  function toggleFullScreen(){
+    document.documentElement.requestFullscreen?.();
+  }
+
+  // initialize UI
+  // Reload data from localStorage on load
+  teachers = loadTeachersData();
+  students = loadStudentsData(); 
+
+  updateMiniList();
+  // showPayment('confirmed'); // REMOVED
+
+  // Put some sample numbers (these are dummy)
+  document.getElementById('totalStudents').innerText = '4,586';
+  document.getElementById('newStudents').innerText = '323';
+  document.getElementById('totalCourses').innerText = '103';
+  document.getElementById('visitors').innerText = '2,352';
+
+  // FIX: পেজ লোড হওয়ার পর URL থেকে আসা সঠিক ভিউটিকে দৃশ্যমান করা
+  const initialView = document.getElementById('activeViewFlag').value;
+  // যদি ভিউটি admin-dashboard.html এ সংজ্ঞায়িত করা একটি JS-হ্যান্ডেলড ভিউ হয়, তবে showView কল করা হবে।
+  // paymentDetail ভিউ এখন সরাসরি HTML-এ ডাইনামিক ডেটা লোড করছে, তাই এটি সরাসরি দৃশ্যমান হবে।
+  if (initialView !== 'dashboard' && initialView !== 'paymentDetail' 
+      && initialView !== 'studentManagement' && initialView !== 'teacherUpdate' 
+      && initialView !== 'registeredTeachers' && initialView !== 'registeredStudents'
+      && initialView !== 'registrationRequests') {
+      
+      showView(initialView);
+  } else {
+      // এই ভিউগুলো Django রেন্ডার করেছে, তাই এদের display:none শর্তটি উপেক্ষা করে দেওয়া হলো।
+      // যদি 'dashboard' লোড হয়, তবে mini list আপডেট করতে হবে।
+      if(initialView === 'dashboard') {
+          updateMiniList();
+      }
+  }
+
+  // -------------- End --------------
+</script>
+
+</body>
+</html>

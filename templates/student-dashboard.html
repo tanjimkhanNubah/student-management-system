@@ -1,0 +1,720 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<style>
+/* ... আপনার পুরো CSS কোড এখানে অপরিবর্তিত আছে ... */
+body {font-family:'Segoe UI',Tahoma,Verdana,sans-serif;margin:0;
+   background-image: url("{% static 'images/school.jpg' %}");
+  background-size:cover;color:#333;}
+.dashboard-container {padding:30px;max-width:1200px;margin:30px auto;
+  background-color:rgba(255,255,255,0.95);border-radius:15px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.2);}
+.header {display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;margin-bottom:25px;}
+.header h1 {color:#004080;margin:0;font-size:2.2em;}
+.user-info {display:flex;align-items:center;gap:20px;}
+.profile-pic {width:80px;height:80px;border-radius:50%;background-color:#e0e0e0;
+  display:flex;align-items:center;justify-content:center;font-size:.8em;color:#555;}
+.info-details p {margin:2px 0;font-size:.9em;}
+.main-content {margin-top:20px;}
+
+/* Cards */
+.card {
+  background: linear-gradient(to bottom, #f0f8ff, #e6f2ff);
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.18);
+  transition: transform 0.3s, box-shadow 0.3s;
+  margin-bottom: 25px;
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.22);
+}
+/* Result Card different color */
+#result { background: linear-gradient(to bottom, #fff4e6, #ffe6cc); }
+
+/* Chart boxes with hover animation */
+.chart-box {
+  flex:1; min-width:260px;
+  background: linear-gradient(145deg, #ffffff, #f0f8ff);
+  padding: 20px;
+  border-radius:14px;
+  box-shadow:0 5px 18px rgba(0,0,0,0.12);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.chart-box:hover {
+  transform: translateY(-4px);
+  box-shadow:0 10px 25px rgba(0,0,0,0.18);
+}
+
+/* Result chart container fix */
+#result .chart-container {
+  display:flex;
+  justify-content:flex-start;
+  gap:20px;
+  margin-top:15px;
+  flex-wrap:wrap;
+}
+
+/* Back button */
+.back-btn {
+  margin-top:18px;
+  display:inline-block;
+  text-decoration:none;
+  background:#007bff;
+  color:white;
+  padding:9px 18px;
+  border-radius:7px;
+  font-weight:bold;
+  transition:.3s;
+}
+.back-btn:hover { background:#0056b3; }
+
+/* Download Report Card button */
+.btn-report {
+  background-color:#28a745; /* Green */
+  color:white;
+  padding:10px 20px;
+  border:none;
+  border-radius:6px;
+  font-weight:bold;
+  cursor:pointer;
+  transition:.3s;
+}
+.btn-report:hover { background-color:#218838; }
+
+/* Table styles */
+.timetable {
+  background: #e6f2ff;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.timetable table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.timetable th, .timetable td, .data-table th, .data-table td, .modal-content-table th, .modal-content-table td { 
+  border:1px solid #ddd;
+  padding:12px;
+  text-align:center;
+}
+.timetable th { background-color:#007bff; color:white; font-size:0.95em; }
+.timetable td.break { background:#ffe0e0; font-weight:bold; }
+.timetable td span.period { display:block; font-size:0.75em; color:#555; margin-top:4px; }
+/* Hover effect for routine rows */
+.timetable tbody tr:hover { background-color: rgba(0, 123, 255, 0.1); transition: background-color 0.3s; }
+
+.data-table {width:100%;border-collapse:collapse;margin-top:15px;}
+.data-table th { background-color:#e9ecef; color:#495057; font-weight:bold; }
+
+.nav-buttons {display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
+.btn {padding:10px 20px;border:none;border-radius:6px;font-weight:bold;cursor:pointer;color:white;transition:.3s;}
+.btn-blue {background-color:#007bff;}
+.btn-blue:hover {background-color:#0056b3;}
+.btn-red {background-color:#dc3545;}
+.btn-red:hover {background-color:#a71d2a;}
+.logout-btn {background-color:#dc3545;color:white;padding:12px 25px;border-radius:8px;
+  cursor:pointer;display:block;width:fit-content;margin-top:30px;text-decoration:none;font-weight:bold;transition:background-color .3s;}
+.logout-btn:hover {background-color:#c82333;}
+@media (max-width:768px){.chart-box{width:100%;}}
+
+/* --- নতুন CSS: Assignment Status Table ও Grade Table --- */
+.assignment-table-container {
+    margin-bottom: 25px;
+}
+.assignment-table, .grade-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+.assignment-table th, .assignment-table td, .grade-table th, .grade-table td {
+    border: 1px solid #ccc;
+    padding: 12px;
+    text-align: left;
+}
+.assignment-table th, .grade-table th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+    color: #004080;
+    text-align: center; 
+}
+.grade-table th {
+    background-color: #e9ecef; 
+}
+.grade-table td {
+    text-align: center;
+}
+.status-pending { color: #ffc107; font-weight: bold; }
+.status-completed { color: #28a745; font-weight: bold; }
+.grade-none { color: #dc3545; }
+.grade-aplus { background-color: #d4edda; color: #155724; font-weight: bold; }
+.grade-fail { background-color: #f8d7da; color: #721c24; font-weight: bold; }
+
+/* 🎯 নতুন CSS: Modal (পপ-আপ) স্টাইল */
+.modal {
+  display: none; 
+  position: fixed; 
+  z-index: 1000; 
+  left: 0;
+  top: 0;
+  width: 100%; 
+  height: 100%; 
+  overflow: auto; 
+  background-color: rgba(0,0,0,0.6); 
+  padding-top: 60px;
+}
+.modal-content {
+  background-color: #fefefe;
+  margin: 5% auto; 
+  padding: 30px;
+  border-radius: 12px;
+  border: 1px solid #888;
+  width: 90%; 
+  max-width: 800px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  animation-name: animatetop;
+  animation-duration: 0.4s
+}
+@keyframes animatetop {
+  from {top: -300px; opacity: 0}
+  to {top: 0; opacity: 1}
+}
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+.modal-content h2 { color: #004080; border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 20px; }
+.modal-content-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+.modal-content-table th { background-color: #007bff; color: white; }
+.message-box { background: #e6f2ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 5px solid #007bff; }
+.message-box h4 { margin-top: 0; color: #004080; }
+.message-date { font-size: 0.8em; color: #6c757d; display: block; margin-bottom: 5px; }
+</style>
+</head>
+<body>
+{# 🎯 FIX: student_results ডেটাটিকে JSON আকারে একটি Script ট্যাগে সংরক্ষণ করা হলো। 'jsonify' ট্যাগ মুছে ফেলা হলো। #}
+<script id="student-results-data" type="application/json">
+{{ student_results|safe }}
+</script>
+
+<div class="dashboard-container">
+  <div class="header">
+    <div class="user-info">
+      <div class="profile-pic">
+        {% if student.photo %}
+          <img src="{{ student.photo.url }}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;" alt="Profile Photo">
+        {% else %}
+          Photo
+        {% endif %}
+      </div>
+      <div class="info-details">
+        <p><strong>Name:</strong> {{ student.first_name }} {{ student.last_name }}</p>
+        <p><strong>Roll:</strong> {{ student.roll_number }}</p>
+        <p><strong>Class:</strong> {{ student.class_name }} - {{ student.section }}</p>
+        <p><strong>Father’s Name:</strong> {{ student.father_name|default:'N/A' }}</p>
+        <p><strong>Mother’s Name:</strong> {{ student.mother_name|default:'N/A' }}</p>
+        <p><strong>Payment Status:</strong> 
+          <span style="font-weight: bold; color: {% if student.payment_status|lower == 'paid' %}#28a745{% elif student.payment_status|lower == 'unpaid' %}#dc3545{% else %}#ffc107{% endif %};">
+            {{ student.payment_status|default:'Unknown' }}
+          </span>
+        </p>
+        </div>
+    </div>
+    <h1>Student Dashboard</h1>
+  </div>
+
+  <div class="nav-buttons">
+    <button class="btn btn-blue" onclick="showSection('result')">Result View</button>
+    <button class="btn btn-blue" onclick="showSection('routine')">Class Routine</button>
+    <button class="btn btn-red" onclick="showSection('performance')">Performance</button>
+    <button class="btn btn-red" onclick="showSection('assignments')">Assignments & Grades</button>
+    <button class="btn btn-blue" onclick="loadExamRoutine()">Exam Routine</button> 
+    <button class="btn btn-blue" onclick="loadStudentMessages()">Message from Admin</button>
+  </div>
+
+  <div class="main-content">
+    <div id="routine" class="card section">
+      <h2>My Routine</h2>
+      <div class="timetable">
+        <table>
+          <thead>
+            <tr><th>Day</th><th>1st</th><th>2nd</th><th>Break</th><th>3rd</th><th>4th</th><th>5th</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Sunday</td>
+              <td>Bangla <span class="period">1st</span></td>
+              <td>English <span class="period">2nd</span></td>
+              <td class="break">Break 30 mins</td>
+              <td>Math <span class="period">3rd</span></td>
+              <td>BGS <span class="period">4th</span></td>
+              <td>ICT <span class="period">5th</span></td>
+            </tr>
+            <tr>
+              <td>Monday</td>
+              <td>Science <span class="period">1st</span></td>
+              <td>Religion <span class="period">2nd</span></td>
+              <td class="break">Break 30 mins</td>
+              <td>Bangla <span class="period">3rd</span></td>
+              <td>English <span class="period">4th</span></td>
+              <td>ICT <span class="period">5th</span></td>
+            </tr>
+            <tr>
+              <td>Tuesday</td>
+              <td>Math <span class="period">1st</span></td>
+              <td>BGS <span class="period">2nd</span></td>
+              <td class="break">Break 30 mins</td>
+              <td>Science <span class="period">3rd</span></td>
+              <td>Religion <span class="period">4th</span></td>
+              <td>ICT <span class="period">5th</span></td>
+            </tr>
+            <tr>
+              <td>Wednesday</td>
+              <td>English <span class="period">1st</span></td>
+              <td>Bangla <span class="period">2nd</span></td>
+              <td class="break">Break 30 mins</td>
+              <td>Math <span class="period">3rd</span></td>
+              <td>ICT <span class="period">4th</span></td>
+              <td>Science <span class="period">5th</span></td>
+            </tr>
+            <tr>
+              <td>Thursday</td>
+              <td>ICT <span class="period">1st</span></td>
+              <td>BGS <span class="period">2nd</span></td>
+              <td class="break">Break 30 mins</td>
+              <td>Religion <span class="period">3rd</span></td>
+              <td>Math <span class="period">4th</span></td>
+              <td>English <span class="period">5th</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <a href="#" class="back-btn" onclick="showDashboard()">⬅ Back to Dashboard</a>
+    </div>
+
+    <div id="result" class="card section">
+      <h2>Result View</h2>
+      <p style="text-align:center;font-weight:bold;">Acquired Rank: N/A</p>
+      <table class="data-table">
+        <thead>
+          <tr><th>Subject</th><th>OT (10)</th><th>CT (10)</th><th>Obtained Marks (100)</th><th>Average (100)</th></tr>
+        </thead>
+        <tbody>
+          {# student_results একটি Python List তাই এটি সরাসরি লুপ চলবে #}
+          {% for result in student_results %}
+          <tr>
+            <td>{{ result.subject_name }}</td>
+            <td>{{ result.ot_marks|default:'-' }}</td>
+            <td>{{ result.ct_marks|default:'-' }}</td>
+            <td>{{ result.obtained_marks|default:'-' }}</td>
+            <td>{{ result.average|default:'-' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      
+      <div style="margin-top:15px;">
+        <button class="btn-report">⬇ Download Report Card</button>
+        <a href="#" class="back-btn" onclick="showDashboard()">⬅ Back to Dashboard</a>
+      </div>
+    </div>
+
+    <div id="performance" class="card section">
+      <h2>Performance Overview</h2>
+      <div class="chart-container">
+        <div class="chart-box">
+          <h3>Subject Wise Marks</h3>
+          <canvas id="marksChart"></canvas>
+        </div>
+      </div>
+      <a href="#" class="back-btn" onclick="showDashboard()">⬅ Back to Dashboard</a>
+    </div>
+
+    <div id="assignments" class="card section">
+      <h2>Assignments & Grades</h2> 
+      
+      {# ========================================================= #}
+      {# 🎯 ডাইনামিক অ্যাসাইনমেন্ট টেবিল #}
+      {# ========================================================= #}
+      <div class="assignment-table-container">
+        <h3>My Assignments</h3>
+        <table class="assignment-table">
+          <thead>
+            <tr>
+              <th style="width:20%;">Subject - Title</th>
+              <th style="width:40%;">Description</th>
+              <th style="width:15%;">Due Date</th>
+              <th style="width:15%;">Status</th>
+              <th style="width:10%;">Grade</th>
+            </tr>
+          </thead>
+          <tbody>
+            {# student_assignments ভ্যারিয়েবল ব্যবহার করা হলো #}
+            {% for assignment in student_assignments %}
+            <tr>
+                <td>{{ assignment.subject_name|default:'N/A' }} - {{ assignment.title|default:'N/A' }}</td>
+                <td>{{ assignment.description|default:'-' }}</td>
+                <td>{{ assignment.due_date|default:'N/A' }}</td>
+                
+                {% if assignment.status == 'Completed' %}
+                    <td class="status-completed">{{ assignment.status }}</td>
+                {% else %}
+                    <td class="status-pending">Pending</td>
+                {% endif %}
+                
+                {% if assignment.grade %}
+                    {# গ্রেড স্টাইল করার জন্য কাস্টম লজিক #}
+                    {% if assignment.grade == 'A+' %}
+                        <td class="grade-aplus">{{ assignment.grade }}</td>
+                    {% elif assignment.grade == 'Fail' %}
+                        <td class="grade-fail">{{ assignment.grade }}</td>
+                    {% else %}
+                        <td>{{ assignment.grade }}</td>
+                    {% endif %}
+                {% else %}
+                    <td class="grade-none">None</td>
+                {% endif %}
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center; color: #6c757d;">No assignments found for you.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      
+      {# ========================================================= #}
+      {# 🎯 ডাইনামিক গ্রেড টেবিল #}
+      {# ========================================================= #}
+      <div class="grade-table-container" style="margin-top: 30px;">
+        <h3>Subject Wise Grades (Based on Average Marks)</h3>
+        <table class="grade-table">
+          <thead>
+            <tr>
+              <th>Subject</th>
+              <th>Average (100)</th>
+              <th>Grade</th>
+            </tr>
+          </thead>
+          <tbody>
+            {# রেজাল্ট টেবিলের মতো, এটিও Django লুপ ব্যবহার করবে #}
+            {% for result in student_results %}
+                {% if result.average|default:'' and result.average != '-' %}
+                    <tr>
+                        <td>{{ result.subject_name }}</td>
+                        {# এই id গুলি JavaScript দ্বারা আপডেট করা হবে #}
+                        <td id="avg-{{ result.subject_name|slugify }}">
+                          <span style="color:#6c757d; font-style:italic;">Loading...</span>
+                        </td>
+                        <td id="grade-{{ result.subject_name|slugify }}">
+                          <span style="color:#6c757d; font-style:italic;">Loading...</span>
+                        </td>
+                    </tr>
+                {% endif %}
+            {% empty %}
+            <tr>
+                <td colspan="3" style="text-align: center; color: #6c757d;">No results available to calculate grades.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      
+      <a href="#" class="back-btn" onclick="showDashboard()">⬅ Back to Dashboard</a>
+    </div>
+
+    <div id="exam" class="card section" style="display:none;"></div>
+    <div id="message" class="card section" style="display:none;"></div>
+
+  </div>
+
+   <a href="{% url 'logout_user' %}" class="logout-btn">Log Out</a>
+</div>
+
+
+<div id="dataModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="document.getElementById('dataModal').style.display='none'">&times;</span>
+    <h2 id="modalTitle"></h2>
+    <div id="modalBody">
+      </div>
+  </div>
+</div>
+
+<script>
+function showSection(id){
+  // Modal বন্ধ করা
+  document.getElementById('dataModal').style.display = 'none'; 
+  
+  document.querySelectorAll('.section').forEach(s=>s.style.display='none');
+  document.getElementById(id).style.display='block';
+}
+function showDashboard(){
+  // Modal বন্ধ করা
+  document.getElementById('dataModal').style.display = 'none'; 
+  
+  document.querySelectorAll('.section').forEach(s=>s.style.display='none');
+}
+showDashboard();
+
+
+// --- AJAX এবং Modal লোডিং ফাংশন ---
+
+// CSRF টোকেন পেতে
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+
+// 1. Exam Routine লোড করা (🎯 FIXED: এখন এটি ফাইল URL হ্যান্ডেল করে)
+function loadExamRoutine() {
+    // অন্য সব সেকশন লুকানো 
+    showDashboard(); 
+    
+    const modal = document.getElementById('dataModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+
+    modalTitle.textContent = 'Exam Routine';
+    modalBody.innerHTML = '<p style="text-align:center;">Loading exam routine...</p>';
+    modal.style.display = 'block';
+
+    fetch("{% url 'ajax_exam_routine' %}", {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrftoken,
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            let htmlContent = '';
+            
+            // views.py থেকে একটি routine অবজেক্ট প্রত্যাশিত
+            if (data.routine && data.routine.file_url) {
+                const routine = data.routine;
+                htmlContent = `
+                    <div style="text-align:center; padding: 20px;">
+                        <h4 style="color:#004080;">${routine.title}</h4>
+                        <p>Published on: ${routine.published_date}</p>
+                        <a href="${routine.file_url}" target="_blank" class="btn btn-report" style="display:inline-block; background-color:#28a745;">
+                            ⬇ View/Download Routine File
+                        </a>
+                        <p style="margin-top:15px; font-size:0.9em; color:#6c757d;">
+                            (The routine will open in a new tab as a PDF or image file.)
+                        </p>
+                    </div>
+                `;
+            } else {
+                htmlContent = '<p style="text-align:center; color:#dc3545; font-weight:bold;">No exam routine file has been published yet.</p>';
+            }
+            modalBody.innerHTML = htmlContent;
+        } else {
+            modalBody.innerHTML = '<p style="text-align:center; color:#dc3545;">Error loading routine: ' + (data.message || 'Unknown error') + '</p>';
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        modalBody.innerHTML = '<p style="text-align:center; color:#dc3545;">Network error or server connection failed.</p>';
+    });
+}
+
+// 2. Student Messages লোড করা (🎯 FIXED: message.content ব্যবহার করা হলো এবং undefined সমস্যা সমাধান করা হলো)
+function loadStudentMessages() {
+    // অন্য সব সেকশন লুকানো 
+    showDashboard();
+    
+    const modal = document.getElementById('dataModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+
+    modalTitle.textContent = 'Message from Admin';
+    modalBody.innerHTML = '<p style="text-align:center;">Loading messages...</p>';
+    modal.style.display = 'block';
+
+    fetch("{% url 'ajax_student_messages' %}", {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrftoken,
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            let htmlContent = '';
+            
+            if (data.messages && data.messages.length > 0) {
+                data.messages.forEach(message => {
+                    // 🎯 FIX: message.content এবং message.timestamp ব্যবহার করা হলো
+                    const subject = message.subject || 'No Subject';
+                    const content = message.content || 'No content provided.';
+                    const timestamp = message.timestamp || 'Undefined Date';
+                    
+                    htmlContent += `
+                        <div class="message-box">
+                            <h4>${subject}</h4>
+                            <span class="message-date">Sent on: ${timestamp}</span>
+                            <p>${content}</p> 
+                        </div>
+                    `;
+                });
+            } else {
+                htmlContent = '<p style="text-align:center; color:#6c757d; font-style:italic;">You have no messages from the Admin at this time.</p>';
+            }
+            modalBody.innerHTML = htmlContent;
+        } else {
+            modalBody.innerHTML = '<p style="text-align:center; color:#dc3545;">Error loading messages: ' + (data.message || 'Unknown error') + '</p>';
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        modalBody.innerHTML = '<p style="text-align:center; color:#dc3545;">Network error or server connection failed.</p>';
+    });
+}
+
+
+// --- গ্রেড ক্যালকুলেশন ফাংশন ---
+function getGrade(average) {
+    // নিশ্চিত করা যে average একটি ভ্যালিড নাম্বার
+    if (isNaN(average) || average < 0) return { grade: 'N/A', class: 'grade-none' }; 
+
+    if (average >= 90) return { grade: 'A+', class: 'grade-aplus' };
+    if (average >= 80) return { grade: 'A', class: '' };
+    if (average >= 70) return { grade: 'A-', class: '' };
+    if (average >= 60) return { grade: 'B', class: '' };
+    if (average >= 50) return { grade: 'C', class: '' };
+    if (average >= 40) return { grade: 'D', class: '' };
+    return { grade: 'Fail', class: 'grade-fail' };
+}
+
+// --- রেজাল্ট এবং গ্রেড প্রসেসিং লজিক (🎯 FIXED: JSON ডেটা Script ট্যাগ থেকে লোড করা হলো) ---
+
+let chartLabels = [];
+let chartData = [];
+
+// 🎯 FIX: Script ট্যাগের মাধ্যমে ডেটা লোড করা এবং JSON.parse() ব্যবহার করা
+const studentResultsElement = document.getElementById('student-results-data');
+let studentResults = [];
+
+try {
+    if (studentResultsElement && studentResultsElement.textContent.trim()) {
+        const rawData = studentResultsElement.textContent.trim();
+        studentResults = JSON.parse(rawData);
+    }
+    
+    if (Array.isArray(studentResults)) {
+        studentResults.forEach(result => {
+            const subjectName = result.subject_name;
+            let finalAverage = 0; 
+            
+            // 1. এভারেজ মার্কস বের করা
+            const averageFromDjango = parseFloat(result.average || 0);
+            
+            if (averageFromDjango > 0) {
+                finalAverage = averageFromDjango;
+            } else {
+                 // Fallback calculation: Obtained Marks as Average
+                const obtained = parseFloat(result.obtained_marks || 0);
+                if (obtained > 0) {
+                    finalAverage = obtained; 
+                }
+            }
+
+            // 2. Performance Chart এর ডেটা (Obtained Marks)
+            const obtainedMarks = parseFloat(result.obtained_marks || 0);
+            chartLabels.push(subjectName);
+            chartData.push(obtainedMarks); 
+            
+            // 3. Grade Table এ Average মার্ক এবং Grade রেন্ডার করা
+            if (finalAverage > 0) { 
+                const gradeInfo = getGrade(finalAverage);
+                
+                // 🎯 FIX: কাস্টম স্ল্যাগিফাই ফাংশন যা টেমপ্লেটের |slugify-এর সাথে মিলবে (যদি এটি ব্যবহার করা হয়)
+                const slug = subjectName.replace(/\s/g, '-').replace(/[^\w-]+/g, '').toLowerCase(); 
+                
+                // Average মার্ক আপডেট
+                const avgElement = document.getElementById(`avg-${slug}`);
+                if (avgElement) {
+                    avgElement.innerHTML = finalAverage.toFixed(2);
+                }
+                
+                // Grade আপডেট
+                const gradeElement = document.getElementById(`grade-${slug}`);
+                if (gradeElement) {
+                    gradeElement.innerHTML = gradeInfo.grade;
+                    // Class যোগ করা যাতে CSS স্টাইল পায়
+                    if (gradeInfo.class) {
+                        gradeElement.classList.add(gradeInfo.class);
+                    }
+                }
+            }
+        });
+    }
+} catch (e) {
+    console.error("Error processing student results for chart and grades. Please ensure views.py returns a valid JSON string:", e);
+    // ডেটা লোড না হলে ডিফল্ট ডেটা সেট
+    chartLabels = ['Bangla','English','Math','BGS','Religion','Science','ICT'];
+    chartData = [83.4, 81.4, 77, 68.6, 78.6, 86, 89.6]; 
+}
+
+
+// --- Performance Chart (marksChart) লোড করা হলো ---
+const marksChartCtx = document.getElementById('marksChart');
+if (marksChartCtx) { 
+    new Chart(marksChartCtx,{
+      type:'bar',
+      data:{
+        labels: chartLabels,
+        datasets:[{
+          label:'Obtained Marks',
+          data:chartData,
+          backgroundColor:'rgba(54,162,235,0.7)'
+        }]
+      },
+      options:{
+        responsive:true,
+        plugins:{
+          datalabels:{anchor:'end',align:'top',color:'#000'}, 
+          legend:{display:false}
+        },
+        scales:{y:{beginAtZero:true,max:100, title: {display: true, text: 'Marks (out of 100)'}}}
+      }
+    });
+}
+</script>
+</body>
+</html>

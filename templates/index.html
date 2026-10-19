@@ -1,0 +1,72 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Cover Page</title>
+
+    <!-- Redirect to main content (Django URL name: main-content) -->
+    <meta http-equiv="refresh" content="5; url={% url 'main_content_page' %}">
+
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            background-color: #2c3e50;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .cover-image {
+            max-width: 80%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .welcome-text {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-top: 20px;
+            color: #f0f0f0;
+            display: flex;
+            gap: 15px;
+        }
+        
+        .welcome-text span {
+            opacity: 0;
+            animation: fadeInUp 0.8s forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <img src="{% static 'images/coverpic2.jpg' %}" 
+         alt="Little Crescent Kindergarten & Crescent High School Logo" 
+         class="cover-image">
+
+    <div class="welcome-text">
+        <span style="animation-delay: 1.5s;">Welcome</span>
+        <span style="animation-delay: 2.0s;">to</span>
+        <span style="animation-delay: 2.5s;">LCCS</span>
+    </div>
+
+</body>
+</html>

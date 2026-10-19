@@ -1,0 +1,229 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admission - Little Crescents Kindergarten and Crescent High School</title>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f0f2f5; 
+            background-image: url("{% static 'images/school.jpg' %}"); 
+            background-size: cover; 
+            background-position: center; 
+            background-attachment: fixed; 
+            background-repeat: no-repeat;
+            color: #333;
+        }
+        
+        /* 💡 FIX 1: Overlay অপাসিটি বাড়ানো হলো এবং পজিশনিং নিশ্চিত করা হলো */
+        .overlay {
+            background-color: rgba(255, 255, 255, 0.98); /* 0.85 থেকে 0.98 করা হলো: কন্টেন্ট স্পষ্ট করার জন্য */
+            min-height: 100vh;
+            padding: 20px;
+            /* 💡 Fix: পজিশন নিশ্চিত করা হলো যাতে কন্টেন্ট উপরে থাকে */
+            position: relative; 
+            z-index: 2; 
+        }
+        
+        /* 💡 FIX 2: কন্টেইনার স্টাইল অ্যাড করা হলো */
+        .container {
+            max-width: 700px;
+            margin: 20px auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            /* z-index 3 যোগ করা হলো, যাতে overlay এর উপরে থাকে */
+            position: relative; 
+            z-index: 3; 
+        }
+        
+        .header {
+            background-color: #004080; 
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        /* ... বাকি স্টাইলগুলো অপরিবর্তিত থাকবে ... */
+        
+        .admission-option {
+            background-color: #e6f7ff; 
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            border: 1px solid #cceeff;
+        }
+        .admission-option:hover {
+            background-color: #cceeff; 
+        }
+        .admission-option strong {
+            font-size: 18px;
+            color: #004080;
+        }
+        .admission-option .arrow {
+            font-size: 20px;
+            color: #0066cc;
+            transition: transform 0.3s ease;
+        }
+        .content {
+            display: none;
+            padding: 15px 20px;
+            background-color: #f0f8ff; 
+            border-left: 3px solid #0066cc;
+            margin-bottom: 10px;
+            border-radius: 0 0 8px 8px;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #555;
+        }
+        .content p {
+            margin: 0 0 10px 0;
+        }
+        .content p:last-child {
+            margin-bottom: 0;
+        }
+        .search-box {
+            background-color: #f2f2f2;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            text-align: left;
+        }
+        .search-box input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .search-box button {
+            background-color: #0066cc;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .search-box button:hover {
+            background-color: #004080;
+        }
+        .footer-nav {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .footer-nav a {
+            color: #0066cc;
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .footer-nav a:hover {
+            color: #004080;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay">
+        <div class="header">
+            Admission
+        </div>
+
+        <div class="container">
+            <h1>Admission Information</h1>
+            
+            <div class="admission-option" onclick="toggleContent('apply-online-content')">
+                <strong>Apply Online</strong>
+                <span class="arrow">→</span>
+            </div>
+            <div class="content" id="apply-online-content">
+                <p>Welcome to our online application portal! Please fill out the form carefully. Ensure all required fields are completed for a successful submission.</p>
+                <p>Please check the **Instructions for Applicant** section before starting your application.</p>
+            </div>
+
+            <div class="admission-option" onclick="toggleContent('admission-advertisement-content')">
+                <strong>Admission Advertisement</strong>
+                <span class="arrow">→</span>
+            </div>
+            <div class="content" id="admission-advertisement-content">
+                <p>Our official admission advertisement for the upcoming academic year is now available. Important dates and requirements are listed below:</p>
+                <ul>
+                    <li><b>Nursery:</b> 20 seats available</li>
+                    </ul>
+                <p>Please check the school notice board and the main website for any updates.</p>
+            </div>
+
+            <div class="admission-option" onclick="toggleContent('instructions-applicant-content')">
+                <strong>Instructions for Applicant</strong>
+                <span class="arrow">→</span>
+            </div>
+            <div class="content" id="instructions-applicant-content">
+                <p>To ensure a smooth application process, please prepare the following documents:</p>
+                <ul>
+                    <li>Original Birth Certificate (and a photocopy)</li>
+                    <li>Previous Academic Records/Report Cards</li>
+                    </ul>
+                <p>All documents must be submitted by the deadline.</p>
+                <p>When you are ready, click <a href="{% url 'apply_form_page' %}" style="color:#0066cc; font-weight:bold;">here</a> to start your application.</p>
+            </div>
+
+            <div class="admission-option" onclick="toggleContent('print-admit-card-content')">
+                <strong>Print Admit Card</strong>
+                <span class="arrow">→</span>
+            </div>
+            <div class="content" id="print-admit-card-content">
+                <p>Your Admit Card will be **visible here after successful online application and payment confirmation.**</p>
+                <p>Please log in to your applicant portal to download and print your admit card for the selection test.</p>
+            </div>
+
+            <div class="search-box">
+                <input type="text" placeholder="Search for a course or enter keywords...">
+                <input type="text" placeholder="Study level">
+                <button>Search</button>
+            </div>
+
+            <div class="footer-nav">
+                <a href="{% url 'main_content_page' %}">Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ... JavaScript অপরিবর্তিত ...
+        function toggleContent(id) {
+            const content = document.getElementById(id);
+            const arrow = content.previousElementSibling.querySelector('.arrow');
+            if (content.style.display === 'block') {
+                content.style.display = 'none';
+                arrow.style.transform = 'rotate(0deg)'; // Reset arrow
+            } else {
+                // Close all other open content sections
+                document.querySelectorAll('.content').forEach(item => {
+                    if (item.id !== id && item.style.display === 'block') {
+                        item.style.display = 'none';
+                        item.previousElementSibling.querySelector('.arrow').style.transform = 'rotate(0deg)';
+                    }
+                });
+                content.style.display = 'block';
+                arrow.style.transform = 'rotate(90deg)'; // Rotate arrow
+            }
+        }
+    </script>
+</body>
+</html>
